@@ -1,0 +1,44 @@
+name: Security Scan (SonarCloud & Semgrep)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  security-scan:
+    name: Run SonarCloud & Semgrep Scans
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=TU_ORGANIZACION
+            -Dsonar.projectKey=TU_PROYECTO
+            -Dsonar.sources=.
+            -Dsonar.host.url=https://sonarcloud.io
+
+      - name: Install & Run Semgrep
+        run: |
+          pip install semgrep
+          semgrep --config=auto --json > semgrep-results.json || true
+
+      - name: Upload SonarCloud Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonarcloud-report
+          path: .scannerwork/
+
+      - name: Upload Semgrep Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-report
+          path: semgrep-results.json
