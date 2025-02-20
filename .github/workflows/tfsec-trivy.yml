@@ -20,11 +20,13 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
           tfsec . --format json > tfsec-results.json || true
 
-      - name: Install Trivy
-        run: |
-          wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_Linux-64bit.tar.gz | tar xz
-          sudo mv trivy /usr/local/bin/
-
+      - name: Install & Run Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          output: 'trivy-results.json'
 
       - name: Upload TfSec Report
         uses: actions/upload-artifact@v4
