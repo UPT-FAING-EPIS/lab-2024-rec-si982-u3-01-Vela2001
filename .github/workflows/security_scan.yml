@@ -22,7 +22,7 @@ jobs:
         with:
           projectBaseDir: .
           args: >
-            -Dsonar.organization=Vela2001
+            -Dsonar.organization=vela2001
             -Dsonar.projectKey=Vela2001_ideaterraform2
             -Dsonar.sources=.
             -Dsonar.branch.name=main
