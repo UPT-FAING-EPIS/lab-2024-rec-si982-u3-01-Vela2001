@@ -17,6 +17,8 @@ jobs:
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v4.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: .
           args: >
@@ -25,7 +27,6 @@ jobs:
             -Dsonar.sources=.
             -Dsonar.branch.name=${{ github.ref_name }}
             -Dsonar.host.url=https://sonarcloud.io
-          sonarToken: ${{ secrets.SONAR_TOKEN }}
 
       - name: Install & Run Semgrep
         run: |
