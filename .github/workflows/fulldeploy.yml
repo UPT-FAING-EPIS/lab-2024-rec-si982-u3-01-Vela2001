@@ -44,6 +44,5 @@ jobs:
       - name: Publish Frontend
         run: |
           cd src/ShortenApp
-          npm install
-          npm run build
-          swa deploy ./dist -n upt-swa-280 --env production
+          dotnet publish -c Release -o publish
+          swa deploy ./publish/wwwroot -n upt-swa-280 --env production
