@@ -1,0 +1,121 @@
+﻿@page "/urlmapping"
+@using System.Text.Json
+@inject HttpClient Http
+
+<PageTitle>Mapeo de Urls</PageTitle>
+
+<h1>Urls Acortadas</h1>
+
+<p>Listado de las urls acortadas</p>
+
+@if (urls == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Url Originales</th>
+                <th>Url Acortada</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var url in urls)
+            {
+                <tr>
+                    <td>@url.Id</td>
+                    <td>@url.OriginalUrl</td>
+                    <td>@url.ShortenedUrl</td>
+                    <td>
+                        <button class="btn btn-warning" @onclick="() => EditarUrl(url)">Editar</button>
+                        <button class="btn btn-danger" @onclick="() => EliminarUrl(url.Id)">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h3>@(editando ? "Editar URL" : "Agregar Nueva URL")</h3>
+    <div>
+        <label>URL Original:</label>
+        <input type="text" @bind="nuevaUrl.OriginalUrl" class="form-control" />
+
+        <label>URL Acortada:</label>
+        <input type="text" @bind="nuevaUrl.ShortenedUrl" class="form-control" />
+
+        <button class="btn btn-success mt-2" @onclick="GuardarUrl">Guardar</button>
+        @if (editando)
+        {
+            <button class="btn btn-secondary mt-2" @onclick="CancelarEdicion">Cancelar</button>
+        }
+    </div>
+}
+
+@code {
+    private UrlMapeada[]? urls;
+    private UrlMapeada nuevaUrl = new();
+    private bool editando = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarUrls();
+    }
+
+    private async Task CargarUrls()
+    {
+        urls = await Http.GetFromJsonAsync<UrlMapeada[]>(
+            "https://upt-afn-280.azurewebsites.net/shorturl",
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
+        );
+    }
+
+    private async Task GuardarUrl()
+    {
+        if (editando)
+        {
+            await Http.PutAsJsonAsync($"https://upt-afn-280.azurewebsites.net/shorturl/{nuevaUrl.Id}", nuevaUrl);
+        }
+        else
+        {
+            await Http.PostAsJsonAsync("https://upt-afn-280.azurewebsites.net/shorturl", nuevaUrl);
+        }
+
+        nuevaUrl = new UrlMapeada();
+        editando = false;
+        await CargarUrls();
+    }
+
+    private void EditarUrl(UrlMapeada url)
+    {
+        nuevaUrl = new UrlMapeada
+        {
+            Id = url.Id,
+            OriginalUrl = url.OriginalUrl,
+            ShortenedUrl = url.ShortenedUrl
+        };
+        editando = true;
+    }
+
+    private async Task EliminarUrl(int id)
+    {
+        await Http.DeleteAsync($"https://upt-afn-280.azurewebsites.net/shorturl/{id}");
+        await CargarUrls();
+    }
+
+    private void CancelarEdicion()
+    {
+        nuevaUrl = new UrlMapeada();
+        editando = false;
+    }
+
+    public class UrlMapeada
+    {
+        public int Id { get; set; }
+        public string OriginalUrl { get; set; } = string.Empty;
+        public string ShortenedUrl { get; set; } = string.Empty;
+    }
+}
