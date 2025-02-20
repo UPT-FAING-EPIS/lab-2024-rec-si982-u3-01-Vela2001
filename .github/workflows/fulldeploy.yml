@@ -1,0 +1,86 @@
+name: Security Scan & Deploy (Backend + Frontend)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  security-scan:
+    name: Run SonarCloud & Semgrep
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v4.1.0
+        with:
+          projectBaseDir: ./src
+          args: >
+            -Dsonar.organization=Vela2001
+            -Dsonar.projectKey=Vela2001_ideaterraform2
+            -Dsonar.sources=.
+            -Dsonar.branch.name=${{ github.ref_name }}
+            -Dsonar.host.url=https://sonarcloud.io
+          sonarToken: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Install & Run Semgrep
+        run: |
+          pip install semgrep
+          semgrep --config=auto --json > semgrep-results.json || true
+
+      - name: Upload SonarCloud Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonarcloud-report
+          path: .scannerwork/
+
+      - name: Upload Semgrep Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-report
+          path: semgrep-results.json
+
+  deploy:
+    name: Deploy Backend & Frontend
+    runs-on: ubuntu-latest
+    needs: security-scan
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # ✅ Configurar Azure FunctionApp y conexión a BD
+      - name: Configure Function App Settings
+        run: |
+          az functionapp config appsettings set -g upt-arg-280-n -n upt-afn-280 \
+            --settings FUNCTIONS_INPROC_NET8_ENABLED=1
+
+          az webapp config connection-string set -g upt-arg-280-n -n upt-afn-280-t \
+            --settings ShortenDB='Server=upt-dbs-280.database.windows.net;Database=shorten;User Id=adminsql;Password=upt.2025;TrustServerCertificate=True;' \
+            --connection-string-type SQLAzure
+
+      # ✅ Publicar y desplegar Backend (Azure Functions)
+      - name: Publish Backend
+        run: |
+          cd src/ShortenFunction
+          dotnet publish -c Release -o publish
+          cd publish
+          zip -r functionapp.zip .
+          az functionapp deployment source config-zip -g upt-arg-373 -n upt-afn-373 --src functionapp.zip --verbose
+
+      # ✅ Publicar y desplegar Frontend (Azure Static Web Apps)
+      - name: Publish Frontend
+        run: |
+          cd src/ShortenApp
+          npm install
+          npm run build
+          swa deploy ./dist -n upt-swa-280 --env production
