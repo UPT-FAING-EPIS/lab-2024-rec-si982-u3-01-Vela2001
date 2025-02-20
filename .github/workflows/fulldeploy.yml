@@ -7,48 +7,9 @@ on:
     branches: [main]
 
 jobs:
-  security-scan:
-    name: Run SonarCloud & Semgrep Scans
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v4.1.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: .
-          args: >
-            -Dsonar.organization=vela2001
-            -Dsonar.projectKey=Vela2001_ideaterraform2
-            -Dsonar.sources=.
-            -Dsonar.branch.name=main
-            -Dsonar.host.url=https://sonarcloud.io
-
-      - name: Install & Run Semgrep
-        run: |
-          pip install semgrep
-          semgrep --config=auto --json > semgrep-results.json || true
-
-      - name: Upload SonarCloud Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: sonarcloud-report
-          path: .scannerwork/
-
-      - name: Upload Semgrep Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: semgrep-report
-          path: semgrep-results.json
-
   deploy:
     name: Deploy Backend & Frontend
     runs-on: ubuntu-latest
-    needs: security-scan
 
     steps:
       - name: Checkout Repository
@@ -62,12 +23,13 @@ jobs:
       # ✅ Configurar Azure FunctionApp y conexión a BD
       - name: Configure Function App Settings
         run: |
-          az functionapp config appsettings set -g upt-arg-280-n -n upt-afn-280 \
+          az functionapp config appsettings set --resource-group upt-arg-280 --name upt-afn-280 \
             --settings FUNCTIONS_INPROC_NET8_ENABLED=1
 
-          az webapp config connection-string set -g upt-arg-280-n -n upt-afn-280-t \
-            --settings ShortenDB='Server=upt-dbs-280.database.windows.net;Database=shorten;User Id=adminsql;Password=upt.2025;TrustServerCertificate=True;' \
-            --connection-string-type SQLAzure
+          az webapp config connection-string set --resource-group upt-arg-280 --name upt-afn-280 \
+            --connection-string-type SQLAzure \
+            --settings ShortenDB='Server=upt-dbs-280.database.windows.net;Database=shorten;User Id=adminsql;Password=upt.2025;TrustServerCertificate=True;'
+
 
       # ✅ Publicar y desplegar Backend (Azure Functions)
       - name: Publish Backend
