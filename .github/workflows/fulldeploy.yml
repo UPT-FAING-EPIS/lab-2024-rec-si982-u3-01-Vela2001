@@ -52,5 +52,6 @@ jobs:
       - name: Publish Frontend
         run: |
           cd src/ShortenApp
+          cat Pages/UrlMapping.razor
           dotnet publish -c Release -o publish
           swa deploy ./publish/wwwroot -n upt-swa-280 --env production
