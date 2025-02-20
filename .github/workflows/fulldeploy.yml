@@ -8,24 +8,25 @@ on:
 
 jobs:
   security-scan:
-    name: Run SonarCloud & Semgrep
+    name: Run SonarCloud & Semgrep Scans
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v4.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          projectBaseDir: ./src
+          projectBaseDir: .
           args: >
-            -Dsonar.organization=Vela2001
+            -Dsonar.organization=vela2001
             -Dsonar.projectKey=Vela2001_ideaterraform2
             -Dsonar.sources=.
-            -Dsonar.branch.name=${{ github.ref_name }}
+            -Dsonar.branch.name=main
             -Dsonar.host.url=https://sonarcloud.io
-          sonarToken: ${{ secrets.SONAR_TOKEN }}
 
       - name: Install & Run Semgrep
         run: |
