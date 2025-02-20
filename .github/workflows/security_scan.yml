@@ -23,9 +23,9 @@ jobs:
           projectBaseDir: .
           args: >
             -Dsonar.organization=Vela2001
-            -Dsonar.projectKey=ideaterraform2
+            -Dsonar.projectKey=Vela2001_ideaterraform2
             -Dsonar.sources=.
-            -Dsonar.branch.name=${{ github.ref_name }}
+            -Dsonar.branch.name=main
             -Dsonar.host.url=https://sonarcloud.io
 
       - name: Install & Run Semgrep
