@@ -41,6 +41,14 @@ jobs:
           az functionapp deployment source config-zip -g upt-arg-280 -n upt-afn-280 --src functionapp.zip --verbose
 
       # ✅ Publicar y desplegar Frontend (Azure Static Web Apps)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Azure Static Web Apps CLI
+        run: npm install -g @azure/static-web-apps-cli
+
       - name: Publish Frontend
         run: |
           cd src/ShortenApp
