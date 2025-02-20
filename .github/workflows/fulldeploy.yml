@@ -1,4 +1,4 @@
-name: Security Scan & Deploy (Backend + Frontend)
+name: Deploy (Backend + Frontend)
 
 on:
   push:
@@ -38,7 +38,7 @@ jobs:
           dotnet publish -c Release -o publish
           cd publish
           zip -r functionapp.zip .
-          az functionapp deployment source config-zip -g upt-arg-373 -n upt-afn-373 --src functionapp.zip --verbose
+          az functionapp deployment source config-zip -g upt-arg-280 -n upt-afn-280 --src functionapp.zip --verbose
 
       # ✅ Publicar y desplegar Frontend (Azure Static Web Apps)
       - name: Publish Frontend
